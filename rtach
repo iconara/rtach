@@ -1,0 +1,91 @@
+#!/usr/bin/env ruby
+
+require 'getoptlong'
+
+
+SOCKET_DIR = '/tmp/dtach'
+
+
+def main
+  opts = GetoptLong.new(
+    ['--help', '-h', GetoptLong::NO_ARGUMENT],
+    ['--list', '-l', GetoptLong::NO_ARGUMENT]
+  )
+
+  opts.each do |opt, arg|
+    case opt
+    when '--help'
+      usage
+      exit 1
+    when '--list'
+      list
+      exit
+    end
+  end
+
+  case ARGV.length
+  when 1
+    attach ARGV[0]
+  when 2
+    create ARGV[0], ARGV[1..-1].join(' ')
+  else
+    list
+  end
+end
+
+def usage
+  error <<-end
+Usage: rtach <session name> [command]
+Attach to or create dtach sessions
+
+To list existing sessions run rtach without arguments. To attach to an existing
+session pass the session name as sole argument. To create a new session pass the
+session name as first argument and the command to run as the next.
+
+    --help, -h This message
+    --list, -l List existing sessions
+
+  end
+end
+
+def list
+  if File.exists? SOCKET_DIR
+    Dir["#{SOCKET_DIR}/*.dtach"].each do |session|
+      session =~ /^.*\/(.+)\.dtach$/
+      
+      puts $1
+    end
+  end
+end
+
+def attach(session_name)
+  session_socket = socket_path(session_name)
+  
+  if File.socket? session_socket
+    exec 'dtach', '-a', session_socket
+  else
+    error "No such session"
+  end
+end
+
+def create(session_name, command)
+  session_socket = socket_path(session_name)
+  
+  if File.socket? session_socket
+    error "Session already exists"
+  elsif File.exists? session_socket
+    error "Cannot create session: remove \"#{session_socket}\" first"
+  else
+    exec 'dtach', '-c', session_socket, command
+  end
+end
+
+def socket_path(session_name)
+  "#{SOCKET_DIR}/#{session_name}.dtach"
+end
+
+def error(msg)
+  $stderr.puts msg
+end
+
+main
