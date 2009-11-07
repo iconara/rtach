@@ -1,0 +1,21 @@
+# Readme
+
+`rtach` is a thin wrapper that simplifies the use of `dtach`.
+
+I like `dtach` because it doesn't get in my way, as `screen` does. However, since I can't have multiple "windows" open in the same session I have to keep track of my session sockets and this quickly gets out of hand.
+
+## Usage
+
+`rtach` keeps track of your sessions, simply run 
+
+    rtach
+
+to see the list of active sessions (if you want to be explicit you can also run `rtach --list`). It makes it easier to attach to a running session, run 
+
+    rtach your-session-name
+    
+to attach to that session. Finally creating a new session is a breeze, just run 
+
+    rtach your-session-name command-to-run
+    
+and a new session will be created. That's all there is to it. If you have special needs you'll have to use `dtach` directly, but `rtach` doesn't get in the way of that you can create new sessions with `dtach` and use them with `rtach`, and vice-versa. `rtach` puts session sockets in `/tmp/dtach` -- the sockets are named after the session and gets the suffix ".dtach".
